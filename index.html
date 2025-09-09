@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoSPI Data Query API Gateway</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <!-- ...existing code... -->
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --accent-color: #ff9800; /* Changed accent to a vibrant orange */
+            --light-bg: #f3f7fa;    /* Slightly brighter */
+            --dark-bg: #1a2233;     /* Deeper dark */
+            --gradient-1: linear-gradient(90deg, #0d6efd 0%, #00c6ff 100%);
+            --gradient-2: linear-gradient(90deg, #ff9800 0%, #ff5e62 100%);
+            --gradient-3: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        body {
+            background: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .navbar {
+            background: var(--gradient-1);
+            box-shadow: 0 4px 16px rgba(13, 110, 253, 0.15);
+        }
+        
+        .navbar-brand, .navbar-nav .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        .hero-section {
+            background: linear-gradient(rgba(13,110,253,0.7), rgba(255,152,0,0.7)), 
+                        url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 5rem 0 4rem 0;
+            margin-bottom: 2.5rem;
+            border-radius: 0 0 32px 32px;
+            box-shadow: 0 8px 32px rgba(13,110,253,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-section::after {
+            content: "";
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            height: 12px;
+            background: var(--gradient-2);
+            border-radius: 0 0 32px 32px;
+        }
+        .hero-section h1 {
+            text-shadow: 0 4px 24px rgba(0,0,0,0.25);
+        }
+        
+        .query-box {
+            background: linear-gradient(135deg, #fff 80%, #e3f0ff 100%);
+            border-radius: 18px;
+            padding: 28px 24px;
+            box-shadow: 0 6px 24px rgba(13,110,253,0.08);
+            border: 2px solid #e3f0ff;
+        }
+        
+        .result-box {
+            background: linear-gradient(135deg, #fff 80%, #fffbe3 100%);
+            border-radius: 18px;
+            padding: 28px 24px;
+            box-shadow: 0 6px 24px rgba(255,152,0,0.08);
+            border: 2px solid #fffbe3;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+        
+        .card {
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin-bottom: 24px;
+            border: none;
+            background: #fff;
+        }
+        
+        .card:hover {
+            transform: translateY(-7px) scale(1.02);
+            box-shadow: 0 8px 32px rgba(13,110,253,0.12);
+        }
+        
+        .btn-primary {
+            background: var(--gradient-2);
+            border: none;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(255,152,0,0.12);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--gradient-3);
+            box-shadow: 0 4px 16px rgba(67,233,123,0.12);
+        }
+        
+        .feature-icon {
+            font-size: 2.7rem;
+            background: var(--gradient-3);
+            color: #fff;
+            border-radius: 50%;
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem auto;
+            box-shadow: 0 2px 8px rgba(67,233,123,0.15);
+        }
+        
+        .example-queries .badge {
+            cursor: pointer;
+            margin: 6px 6px 0 0;
+            padding: 10px 18px;
+            font-size: 1rem;
+            background: var(--gradient-1);
+            color: #fff;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(13,110,253,0.10);
+            transition: background 0.2s, color 0.2s;
+        }
+        .example-queries .badge:hover {
+            background: var(--gradient-2);
+            color: #fff;
+        }
+        
+        .footer {
+            background: var(--gradient-1);
+            color: white;
+            padding: 2.5rem 0 1.5rem 0;
+            margin-top: 2.5rem;
+            border-radius: 32px 32px 0 0;
+            box-shadow: 0 -4px 32px rgba(13,110,253,0.10);
+        }
+        .footer a {
+            color: #fff;
+            text-decoration: underline;
+        }
+        .footer a:hover {
+            color: #ff9800;
+        }
+        
+        .json-key {
+            color: #d35400;
+            font-weight: 600;
+        }
+        .json-string {
+            color: #388e3c;
+        }
+        .json-number {
+            color: #1976d2;
+        }
+        .json-boolean {
+            color: #ff9800;
+        }
+        .json-null {
+            color: #b71c1c;
+        }
+        
+        .spinner {
+            display: none;
+        }
+        
+        /* Responsive tweaks */
+        @media (max-width: 991px) {
+            .hero-section {
+                padding: 3rem 0 2rem 0;
+            }
+            .footer {
+                border-radius: 0;
+            }
+        }
+        @media (max-width: 767px) {
+            .query-box, .result-box {
+                padding: 18px 8px;
+            }
+            .card {
+                margin-bottom: 16px;
+            }
+        }
+    </style>
+<!--
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-database me-2"></i>
+                MoSPI Data API Gateway
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-home me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-book me-1"></i> Documentation</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold">Natural Language Query Interface</h1>
+            <p class="lead">Ask questions about survey data in plain English and get results in JSON format</p>
+            <p>Powered by AI and NLP technologies</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            <!-- Left Side: Query Input -->
+            <div class="col-lg-6">
+                <div class="query-box">
+                    <h3 class="mb-4"><i class="fas fa-question-circle me-2"></i>Ask a Question</h3>
+                    <div class="mb-3">
+                        <label for="surveySelect" class="form-label">Select Survey Dataset</label>
+                        <select class="form-select" id="surveySelect">
+                            <option value="plfs">Periodic Labour Force Survey (PLFS)</option>
+                            <option value="hces">Household Consumer Expenditure Survey (HCES)</option>
+                            <option value="nss">National Sample Survey (NSS)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="queryInput" class="form-label">Enter your question</label>
+                        <textarea class="form-control" id="queryInput" rows="4" placeholder="e.g., Show me the average income for males in Maharashtra aged 25-35"></textarea>
+                    </div>
+                    <button id="submitQuery" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-2"></i>Execute Query
+                        <div class="spinner-border spinner-border-sm spinner ms-2" role="status"></div>
+                    </button>
+                    
+                    <div class="mt-4">
+                        <h5>Example Queries</h5>
+                        <div class="example-queries">
+                            <span class="badge bg-light text-dark" data-query="Show unemployment rate for females in Karnataka">Unemployment: Females, Karnataka</span>
+                            <span class="badge bg-light text-dark" data-query="Average monthly consumption in rural areas">Consumption: Rural Areas</span>
+                            <span class="badge bg-light text-dark" data-query="Education level distribution for age group 18-25">Education: Age 18-25</span>
+                            <span class="badge bg-light text-dark" data-query="Labor participation rate by state">Labor by State</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-bolt me-2"></i>How It Works</h5>
+                        <ol>
+                            <li>Your natural language question is parsed using NLP algorithms</li>
+                            <li>The system identifies key entities, filters, and parameters</li>
+                            <li>A SQL query is generated based on the survey dataset schema</li>
+                            <li>The query is executed against the database</li>
+                            <li>Results are returned in JSON format</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side: Results -->
+            <div class="col-lg-6">
+                <div class="result-box">
+                    <h3 class="mb-4"><i class="fas fa-file-code me-2"></i>Query Results (JSON)</h3>
+                    <div id="jsonResult" class="p-3 bg-light rounded">
+                        <p class="text-center text-muted">Your results will appear here</p>
+                    </div>
+                </div>
+                
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-bar me-2"></i>Visualization</h5>
+                        <div id="visualization" class="text-center p-4">
+                            <p class="text-muted">Visualization will appear here after query execution</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Features Section -->
+        <div class="row mt-5">
+            <h2 class="text-center mb-4">Key Features</h2>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="feature-icon">
+                            <i class="fas fa-language"></i>
+                        </div>
+                        <h5 class="card-title">Natural Language Processing</h5>
+                        <p class="card-text">Ask questions in plain English without needing to know SQL or database schemas.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="feature-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <h5 class="card-title">Multiple Survey Datasets</h5>
+                        <p class="card-text">Access various government survey datasets through a unified interface.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center h-100">
+                    <div class="card-body">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h5 class="card-title">Privacy Protection</h5>
+                        <p class="card-text">Built-in privacy mechanisms to prevent disclosure of sensitive information.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>MoSPI Data API Gateway</h5>
+                    <p>A platform for accessing government survey data through natural language queries.</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>Links</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">Documentation</a></li>
+                        <li><a href="#" class="text-white">API Reference</a></li>
+                        <li><a href="#" class="text-white">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>Connect</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white"><i class="fab fa-github me-2"></i>GitHub</a></li>
+                        <li><a href="#" class="text-white"><i class="fab fa-twitter me-2"></i>Twitter</a></li>
+                        <li><a href="#" class="text-white"><i class="fas fa-envelope me-2"></i>Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="mt-4">
+            <p class="text-center mb-0">© 2025 Ministry of Statistics and Programme Implementation. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const submitButton = document.getElementById('submitQuery');
+            const spinner = document.querySelector('.spinner');
+            const jsonResult = document.getElementById('jsonResult');
+            const visualization = document.getElementById('visualization');
+            const exampleQueries = document.querySelectorAll('.example-queries .badge');
+            
+            // Example data for demonstration
+            const exampleData = {
+                "plfs": {
+                    "Show unemployment rate for females in Karnataka": {
+                        "query": "SELECT state, gender, age_group, unemployment_rate FROM plfs_data WHERE state = 'Karnataka' AND gender = 'Female'",
+                        "data": {
+                            "metadata": {
+                                "survey": "Periodic Labour Force Survey",
+                                "year": "2023",
+                                "sample_size": 12500
+                            },
+                            "results": [
+                                {
+                                    "state": "Karnataka",
+                                    "gender": "Female",
+                                    "age_group": "15-29",
+                                    "unemployment_rate": 12.4
+                                },
+                                {
+                                    "state": "Karnataka",
+                                    "gender": "Female",
+                                    "age_group": "30-44",
+                                    "unemployment_rate": 8.2
+                                },
+                                {
+                                    "state": "Karnataka",
+                                    "gender": "Female",
+                                    "age_group": "45-59",
+                                    "unemployment_rate": 5.1
+                                }
+                            ]
+                        }
+                    },
+                    "Show me the average income for males in Maharashtra aged 25-35": {
+                        "query": "SELECT state, gender, age_group, AVG(income) as average_income FROM plfs_data WHERE state = 'Maharashtra' AND gender = 'Male' AND age_group = '25-35'",
+                        "data": {
+                            "metadata": {
+                                "survey": "Periodic Labour Force Survey",
+                                "year": "2023",
+                                "sample_size": 9800
+                            },
+                            "results": [
+                                {
+                                    "state": "Maharashtra",
+                                    "gender": "Male",
+                                    "age_group": "25-35",
+                                    "average_income": 45230
+                                }
+                            ]
+                        }
+                    }
+                },
+                "hces": {
+                    "Average monthly consumption in rural areas": {
+                        "query": "SELECT sector, AVG(monthly_consumption) as avg_consumption FROM hces_data WHERE sector = 'Rural'",
+                        "data": {
+                            "metadata": {
+                                "survey": "Household Consumer Expenditure Survey",
+                                "year": "2023",
+                                "sample_size": 15600
+                            },
+                            "results": [
+                                {
+                                    "sector": "Rural",
+                                    "avg_consumption": 3250
+                                }
+                            ]
+                        }
+                    }
+                }
+            };
+            
+            // Function to format JSON with syntax highlighting
+            function syntaxHighlight(json) {
+                if (typeof json != 'string') {
+                    json = JSON.stringify(json, undefined, 2);
+                }
+                json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                    let cls = 'json-number';
+                    if (/^"/.test(match)) {
+                        if (/:$/.test(match)) {
+                            cls = 'json-key';
+                        } else {
+                            cls = 'json-string';
+                        }
+                    } else if (/true|false/.test(match)) {
+                        cls = 'json-boolean';
+                    } else if (/null/.test(match)) {
+                        cls = 'json-null';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                });
+            }
+            
+            // Function to update visualization
+            function updateVisualization(data) {
+                if (data.results && data.results.length > 0) {
+                    // Simple bar chart visualization for demonstration
+                    visualization.innerHTML = `
+                        <h6>${data.metadata.survey} (${data.metadata.year})</h6>
+                        <p class="text-muted">Sample size: ${data.metadata.sample_size.toLocaleString()}</p>
+                        <canvas id="chart" width="400" height="200"></canvas>
+                    `;
+                    
+                    // In a real implementation, we would use Chart.js or similar for visualization
+                    setTimeout(() => {
+                        visualization.innerHTML += `
+                            <p class="mt-3"><i class="fas fa-info-circle me-1"></i>Visualization would be generated here based on the data structure</p>
+                        `;
+                    }, 500);
+                } else {
+                    visualization.innerHTML = `<p class="text-muted">No data available for visualization</p>`;
+                }
+            }
+            
+            // Handle query submission
+            submitButton.addEventListener('click', function() {
+                const query = document.getElementById('queryInput').value.trim();
+                const survey = document.getElementById('surveySelect').value;
+                
+                if (!query) {
+                    alert('Please enter a query');
+                    return;
+                }
+                
+                // Show loading state
+                spinner.style.display = 'inline-block';
+                submitButton.disabled = true;
+                
+                // Simulate API call with timeout
+                setTimeout(() => {
+                    let result;
+                    
+                    // Check if we have example data for this query
+                    if (exampleData[survey] && exampleData[survey][query]) {
+                        result = exampleData[survey][query];
+                    } else {
+                        // Default response if no example data
+                        result = {
+                            query: `SELECT * FROM ${survey}_data WHERE /* NLP parsed filters */`,
+                            data: {
+                                metadata: {
+                                    survey: survey.toUpperCase(),
+                                    year: "2023",
+                                    sample_size: Math.floor(Math.random() * 10000) + 5000
+                                },
+                                results: [],
+                                message: "No exact match found. Try refining your query."
+                            }
+                        };
+                    }
+                    
+                    // Display the results
+                    jsonResult.innerHTML = `<pre>${syntaxHighlight(result.data)}</pre>`;
+                    
+                    // Update visualization
+                    updateVisualization(result.data);
+                    
+                    // Hide loading state
+                    spinner.style.display = 'none';
+                    submitButton.disabled = false;
+                }, 1500);
+            });
+            
+            // Add example query click handlers
+            exampleQueries.forEach(badge => {
+                badge.addEventListener('click', function() {
+                    document.getElementById('queryInput').value = this.getAttribute('data-query');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
